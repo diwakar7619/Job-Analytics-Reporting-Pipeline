@@ -1,1 +1,319 @@
+```txt id="complete-flow"
+========================================
+1. HTTP REQUEST NODE
+========================================
 
+Purpose:
+Scrapes Internshala job listings through Jina AI.
+
+Where to use:
+HTTP Request → URL
+
+URL:
+https://r.jina.ai/https://internshala.com/jobs/data-science-jobs/
+
+
+========================================
+2. INFORMATION EXTRACTOR NODE
+========================================
+
+Purpose:
+Converts messy Internshala/Jina scraped text into structured JSON.
+
+Where to use:
+Information Extractor → Options → System Prompt Template
+
+SYSTEM PROMPT:
+
+You are a JSON extraction engine.
+
+Extract internship/job listing data from the provided Internshala page content.
+
+For each listing return:
+- job_title
+- company
+- location
+- stipend
+- duration
+- start_date
+- employment_type
+- experience
+- skills
+- applicants
+- posted_date
+- remote
+- job_url
+- description
+- category
+
+Rules:
+- Output ONLY valid JSON
+- Use this format:
+{
+  "results": []
+}
+- Return null for missing values
+- Keep descriptions short and clean
+- Keep skills as a simple array
+- Preserve numbers and dates when available
+- Do not explain anything
+- Do not add extra fields
+- Do not hallucinate missing information
+- Remove unnecessary formatting or symbols
+- Ignore advertisements, login prompts, signup prompts, navigation menus, footer content, banners, and promotional sections
+- Ignore non-technical jobs such as HR, sales, telecalling, customer support, teaching, marketing, relationship manager, recruiter, business development, presenter, accountant, etc.
+- Only extract technical and analytics-related jobs
+
+Category must be one of:
+[
+"Data Science",
+"Data Analyst",
+"AI/ML",
+"Web Development",
+"Backend",
+"Frontend",
+"DevOps",
+"Automation",
+"Cybersecurity",
+"Mobile Development",
+"Software Development"
+]
+
+
+========================================
+3. INFORMATION EXTRACTOR INPUT SCHEMA
+========================================
+
+Purpose:
+Forces structured clean output.
+
+Where to use:
+Information Extractor → Input Schema
+
+SCHEMA:
+
+{
+  "type": "object",
+  "properties": {
+    "results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "job_title": {
+            "type": "string"
+          },
+          "company": {
+            "type": "string"
+          },
+          "location": {
+            "type": "string"
+          },
+          "stipend": {
+            "type": "string"
+          },
+          "duration": {
+            "type": "string"
+          },
+          "start_date": {
+            "type": "string"
+          },
+          "employment_type": {
+            "type": "string"
+          },
+          "experience": {
+            "type": "string"
+          },
+          "skills": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "applicants": {
+            "type": "string"
+          },
+          "posted_date": {
+            "type": "string"
+          },
+          "remote": {
+            "type": "boolean"
+          },
+          "job_url": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
+
+
+========================================
+4. SPLIT OUT NODE
+========================================
+
+Purpose:
+Splits extracted job array into individual rows before storing in Google Sheets.
+
+Where to use:
+Split Out → Field to Split Out
+
+VALUE:
+output.results
+
+
+========================================
+5. GOOGLE SHEETS NODE
+========================================
+
+Purpose:
+Stores extracted jobs into Google Sheets.
+
+Where to use:
+Google Sheets → Columns
+
+FIELDS:
+- job_title
+- company
+- location
+- stipend
+- duration
+- start_date
+- employment_type
+- experience
+- skills
+- applicants
+- posted_date
+- remote
+- job_url
+- description
+- category
+
+
+========================================
+6. AI MARKET SUMMARIZER NODE
+========================================
+
+Purpose:
+Creates professional email-ready market analysis.
+
+Where to use:
+AI Agent / Summarizer → Options → System Message
+
+SYSTEM MESSAGE:
+
+You are a professional job market analyst.
+
+Analyze scraped internship and job listing data and generate a concise professional email-ready summary.
+
+Rules:
+- Use only provided data
+- Do not hallucinate
+- Do not invent statistics
+- Normalize repeated skills
+- Merge duplicate technologies
+- Keep insights concise
+- Avoid repeating the same information
+- Focus on:
+  - hiring domains
+  - technical skills
+  - remote opportunities
+  - fresher opportunities
+  - locations
+  - industry trends
+- Ignore non-technical noise
+- Keep the response readable and professional
+- Use bullet points where useful
+
+Always start with:
+
+Here is the Job Market Analysis:
+
+
+========================================
+7. AI MARKET SUMMARIZER USER PROMPT
+========================================
+
+Purpose:
+Feeds structured extracted job JSON into summarizer.
+
+Where to use:
+AI Agent / Summarizer → Prompt (User Message)
+
+PROMPT:
+
+Job listing data:
+
+{{ JSON.stringify($json.output.results, null, 2) }}
+
+Generate:
+- Top hiring domains
+- Most demanded skills
+- Top locations
+- Remote hiring trends
+- Beginner-friendly opportunities
+- Career recommendations
+
+Keep the response concise and email-friendly.
+
+
+========================================
+8. GMAIL NODE
+========================================
+
+Purpose:
+Sends professional formatted email reports.
+
+Where to use:
+Gmail Node → Message
+
+HTML FORMATTER:
+
+=<h2>Daily Job Market Analysis</h2>
+
+<div style="font-family:Arial; font-size:14px; line-height:1.6;">
+{{
+$json.output
+.replace(/\n/g, '<br>')
+.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
+}}
+</div>
+
+
+========================================
+9. RECOMMENDED OPENROUTER MODELS
+========================================
+
+Information Extractor:
+openai/gpt-oss-120b:free
+
+Summarizer:
+openai/gpt-oss-20b:free
+
+Cheaper/Faster Alternative:
+qwen/qwen3-32b:free
+
+
+========================================
+10. FINAL WORKFLOW ORDER
+========================================
+
+Schedule Trigger
+↓
+HTTP Request
+↓
+Information Extractor
+↓
+Split Out
+├── Google Sheets
+└── AI Market Summarizer
+      ↓
+    Gmail
+```
