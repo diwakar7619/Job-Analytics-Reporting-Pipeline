@@ -1,0 +1,310 @@
+```txt id="all-schemas"
+========================================
+1. INFORMATION EXTRACTOR INPUT SCHEMA
+========================================
+
+Purpose:
+Defines the structured format for extracted job listings.
+
+Where to use:
+Information Extractor → Input Schema
+
+SCHEMA:
+
+{
+  "type": "object",
+  "properties": {
+    "results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "job_title": {
+            "type": "string"
+          },
+          "company": {
+            "type": "string"
+          },
+          "location": {
+            "type": "string"
+          },
+          "stipend": {
+            "type": "string"
+          },
+          "duration": {
+            "type": "string"
+          },
+          "start_date": {
+            "type": "string"
+          },
+          "employment_type": {
+            "type": "string"
+          },
+          "experience": {
+            "type": "string"
+          },
+          "skills": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "applicants": {
+            "type": "string"
+          },
+          "posted_date": {
+            "type": "string"
+          },
+          "remote": {
+            "type": "boolean"
+          },
+          "job_url": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
+
+
+========================================
+2. OPTIONAL STRICT VALIDATION SCHEMA
+========================================
+
+Purpose:
+Prevents hallucinated values and forces stricter formatting.
+
+Where to use:
+Information Extractor → Input Schema
+(Alternative stricter version)
+
+SCHEMA:
+
+{
+  "type": "object",
+  "properties": {
+    "results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "job_title",
+          "company",
+          "location",
+          "skills",
+          "category"
+        ],
+        "properties": {
+          "job_title": {
+            "type": ["string", "null"]
+          },
+          "company": {
+            "type": ["string", "null"]
+          },
+          "location": {
+            "type": ["string", "null"]
+          },
+          "stipend": {
+            "type": ["string", "null"]
+          },
+          "duration": {
+            "type": ["string", "null"]
+          },
+          "start_date": {
+            "type": ["string", "null"]
+          },
+          "employment_type": {
+            "type": ["string", "null"],
+            "enum": [
+              "Internship",
+              "Full-time",
+              "Part-time",
+              "Contract",
+              "Freelance",
+              null
+            ]
+          },
+          "experience": {
+            "type": ["string", "null"]
+          },
+          "skills": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "applicants": {
+            "type": ["string", "null"]
+          },
+          "posted_date": {
+            "type": ["string", "null"]
+          },
+          "remote": {
+            "type": ["boolean", "null"]
+          },
+          "job_url": {
+            "type": ["string", "null"]
+          },
+          "description": {
+            "type": ["string", "null"]
+          },
+          "category": {
+            "type": ["string", "null"],
+            "enum": [
+              "Data Science",
+              "Data Analyst",
+              "AI/ML",
+              "Web Development",
+              "Backend",
+              "Frontend",
+              "DevOps",
+              "Automation",
+              "Cybersecurity",
+              "Mobile Development",
+              "Software Development",
+              null
+            ]
+          }
+        }
+      }
+    }
+  }
+}
+
+
+========================================
+3. GOOGLE SHEETS COLUMN SCHEMA
+========================================
+
+Purpose:
+Recommended structured columns for Google Sheets storage.
+
+Where to use:
+Google Sheets → Columns
+
+SCHEMA:
+
+{
+  "job_title": "",
+  "company": "",
+  "location": "",
+  "stipend": "",
+  "duration": "",
+  "start_date": "",
+  "employment_type": "",
+  "experience": "",
+  "skills": [],
+  "applicants": "",
+  "posted_date": "",
+  "remote": false,
+  "job_url": "",
+  "description": "",
+  "category": ""
+}
+
+
+========================================
+4. OPTIONAL POSTGRESQL TABLE SCHEMA
+========================================
+
+Purpose:
+Future upgrade for structured database storage.
+
+Where to use:
+PostgreSQL
+
+SQL SCHEMA:
+
+CREATE TABLE jobs (
+    id SERIAL PRIMARY KEY,
+    job_title TEXT,
+    company TEXT,
+    location TEXT,
+    stipend TEXT,
+    duration TEXT,
+    start_date TEXT,
+    employment_type TEXT,
+    experience TEXT,
+    applicants TEXT,
+    posted_date TEXT,
+    remote BOOLEAN,
+    job_url TEXT,
+    description TEXT,
+    category TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+
+========================================
+5. OPTIONAL SKILLS TABLE SCHEMA
+========================================
+
+Purpose:
+Stores normalized skills separately.
+
+Where to use:
+PostgreSQL
+
+SQL SCHEMA:
+
+CREATE TABLE job_skills (
+    id SERIAL PRIMARY KEY,
+    job_id INTEGER REFERENCES jobs(id),
+    skill TEXT
+);
+
+
+========================================
+6. OPTIONAL NORMALIZED SKILL MAP
+========================================
+
+Purpose:
+Reduces duplicate technologies and inconsistent naming.
+
+Where to use:
+Code Node / JavaScript
+
+SCHEMA:
+
+{
+  "English Proficiency (Spoken)": "English",
+  "English Proficiency (Written)": "English",
+  "MS-Excel": "Excel",
+  "MS Excel": "Excel",
+  "Javascript": "JavaScript",
+  "Postgres": "PostgreSQL",
+  "Nodejs": "Node.js",
+  "Reactjs": "React",
+  "Nextjs": "Next.js"
+}
+
+
+========================================
+7. OPTIONAL EMAIL ANALYSIS STRUCTURE
+========================================
+
+Purpose:
+Defines consistent AI summary structure.
+
+Where to use:
+AI Market Summarizer
+
+SCHEMA:
+
+{
+  "Top Hiring Domains": [],
+  "Most Demanded Skills": [],
+  "Top Locations": [],
+  "Remote Hiring Trends": "",
+  "Beginner-Friendly Opportunities": "",
+  "Career Recommendations": []
+}
+```
+
